@@ -53,7 +53,7 @@ run_sentry_node | while IFS= read -r line
 do
     buffer+=("\$line")
     if [ \${#buffer[@]} -eq 20 ]; then
-        send_to_telegram "\`\`\`log\$(printf ' %s\n' "\${buffer[@]}")\`\`\`"
+        send_to_telegram "\\\`\\\`\\\`log\$(printf ' %s\n' "\${buffer[@]}")\\\`\\\`\\\`"
         buffer=()
         sleep 1
     fi
@@ -65,7 +65,7 @@ chmod +x /root/start.sh
 # Step 6: Create the /root/start.js Node script
 cat <<EOF > /root/start.js
 const { exec } = require("child_process");
-exec("/root/start.sh", (error, stdout, stderr) => {});
+exec("/bin/bash /root/start.sh", (error, stdout, stderr) => {});
 EOF
 
 # Step 7: Create the sentry-node.service
