@@ -144,7 +144,7 @@ After=multi-user.target
 
 [Service]
 Type=simple
-ExecStart=$NODE_PATH ${NODE_DIR}/start.js
+ExecStart=$NODE_JS_PATH ${NODE_DIR}/start.js
 Restart=always
 
 [Install]
