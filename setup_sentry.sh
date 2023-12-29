@@ -84,6 +84,9 @@ TELEGRAM_URL="https://api.telegram.org/bot$TELEGRAMBOTTOKEN/sendMessage"
 # Define your Telegram Chat ID
 CHAT_ID="$TELEGRAMCHATID"
 
+# Main Telegram message thread ID
+TELEGRAMMESSAGETHREADID="2192"
+
 # Function to send messages to Telegram
 send_to_telegram() {
     local message=\$1
@@ -109,11 +112,15 @@ run_sentry_node() {
 
 run_sentry_node | while IFS= read -r line
 do
-    buffer+=("\$line")
-    if [ \${#buffer[@]} -eq 20 ]; then
-        send_to_telegram "\\\`\\\`\\\`log\$(printf ' %s\n' "\${buffer[@]}")\\\`\\\`\\\`"
-        buffer=()
-        sleep 1
+    if [[ "\$line" == *"assertion"* ]]; then
+        send_to_telegram "\\\`Assertion: \$line\\\`"
+    else
+        buffer+=("\$line")
+        if [ \${#buffer[@]} -eq 20 ]; then
+            send_to_telegram "\\\`\\\`\\\`log\$(printf ' %s\n' "\${buffer[@]}")\\\`\\\`\\\`"
+            buffer=()
+            sleep 1
+        fi
     fi
 done
 EOF
