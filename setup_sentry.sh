@@ -59,6 +59,18 @@ read -p "Enter Telegram Bot Token: " TELEGRAMBOTTOKEN
 read -p "Enter Telegram Chat ID: " TELEGRAMCHATID
 read -p "Enter Telegram Message Thread ID: " TELEGRAMMESSAGETHREADID
 
+# Step 3: Install NVM, Expect, Curl, and Unzip
+sudo apt update
+sudo apt install -y expect curl unzip
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.1/install.sh | bash
+export NVM_DIR="$([ -z "${XDG_CONFIG_HOME-}" ] && printf %s "${HOME}/.nvm" || printf %s "${XDG_CONFIG_HOME}/nvm")"
+[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh" # This loads nvm
+nvm install --lts
+
+# Get the path of the newly installed Node.js
+NODE_JS_PATH=$(which node)
+
+
 # Download and unzip the Sentry Node CLI into the node-specific directory
 curl -L -o "${NODE_DIR}/sentry-node-cli-linux.zip" "https://github.com/xai-foundation/sentry/releases/latest/download/sentry-node-cli-linux.zip"
 unzip "${NODE_DIR}/sentry-node-cli-linux.zip" -d "$NODE_DIR/"
@@ -132,7 +144,7 @@ After=multi-user.target
 
 [Service]
 Type=simple
-ExecStart=/usr/bin/node ${NODE_DIR}/start.js
+ExecStart=$NODE_PATH ${NODE_DIR}/start.js
 Restart=always
 
 [Install]
