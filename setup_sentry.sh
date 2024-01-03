@@ -52,6 +52,7 @@ echo "Created directory $NODE_DIR for node files"
 
 # Ask for the private key
 read -sp "Enter the private key: " PRIVATEKEY
+PRIVATEKEY=$(echo $PRIVATEKEY | tr -d '[:space:]') # Remove spaces and newlines
 echo ""
 
 # Ask for Telegram details
@@ -76,6 +77,9 @@ curl -L -o "${NODE_DIR}/sentry-node-cli-linux.zip" "https://github.com/xai-found
 unzip "${NODE_DIR}/sentry-node-cli-linux.zip" -d "$NODE_DIR/"
 chmod +x "${NODE_DIR}/sentry-node-cli-linux"
 
+# Main Telegram message thread ID for logs
+MAIN_LOGS_THREAD_ID=2192
+
 # Create the start.sh script for the node
 cat <<EOF > "${NODE_DIR}/start.sh"
 # Define your Telegram Bot API URL with your bot token
@@ -84,13 +88,11 @@ TELEGRAM_URL="https://api.telegram.org/bot$TELEGRAMBOTTOKEN/sendMessage"
 # Define your Telegram Chat ID
 CHAT_ID="$TELEGRAMCHATID"
 
-# Main Telegram message thread ID
-TELEGRAMMESSAGETHREADID="2192"
-
 # Function to send messages to Telegram
 send_to_telegram() {
     local message=\$1
-    curl -s -X POST \$TELEGRAM_URL -d chat_id=\$CHAT_ID -d text="\$message" -d message_thread_id=$TELEGRAMMESSAGETHREADID -d parse_mode="MarkdownV2" > /dev/null
+    local thread_id=\$2
+    curl -s -X POST \$TELEGRAM_URL -d chat_id=\$CHAT_ID -d text="\$message" -d message_thread_id=\$thread_id -d parse_mode="MarkdownV2" > /dev/null
 }
 
 buffer=()
@@ -113,11 +115,11 @@ run_sentry_node() {
 run_sentry_node | while IFS= read -r line
 do
     if [[ "\$line" == *"assertion"* ]]; then
-        send_to_telegram "\\\`Assertion: \$line\\\`"
+        send_to_telegram "\\\`Assertion: \$line\\\`" $MAIN_LOGS_THREAD_ID
     else
         buffer+=("\$line")
         if [ \${#buffer[@]} -eq 20 ]; then
-            send_to_telegram "\\\`\\\`\\\`log\$(printf ' %s\n' "\${buffer[@]}")\\\`\\\`\\\`"
+            send_to_telegram "\\\`\\\`\\\`log\$(printf ' %s\n' "\${buffer[@]}")\\\`\\\`\\\`" $TELEGRAMMESSAGETHREADID
             buffer=()
             sleep 1
         fi
