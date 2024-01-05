@@ -101,7 +101,7 @@ run_sentry_node() {
     expect -c "
     exp_internal 1
     log_user 1
-    spawn /root/sentry-node-cli-linux
+    spawn ${NODE_DIR}/sentry-node-cli-linux
     expect \"\$\"
     send \"boot-operator\r\"
     expect \"Enter the private key of the operator:\"
