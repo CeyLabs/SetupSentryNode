@@ -1,6 +1,6 @@
 #!/bin/bash
 
-BASE_DIR="/root/sentryNodes"
+BASE_DIR="$HOME/sentryNodes" # Change this to the user's home directory
 
 # Create the BASE_DIR if it doesn't exist
 if [ ! -d "$BASE_DIR" ]; then
@@ -60,17 +60,18 @@ read -p "Enter Telegram Bot Token: " TELEGRAMBOTTOKEN
 read -p "Enter Telegram Chat ID: " TELEGRAMCHATID
 read -p "Enter Telegram Message Thread ID: " TELEGRAMMESSAGETHREADID
 
-# Step 3: Install NVM, Expect, Curl, and Unzip
+# Install necessary packages (NVM, Expect, Curl, and Unzip) without using sudo
 sudo apt update
 sudo apt install -y expect curl unzip
 curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.1/install.sh | bash
-export NVM_DIR="$([ -z "${XDG_CONFIG_HOME-}" ] && printf %s "${HOME}/.nvm" || printf %s "${XDG_CONFIG_HOME}/nvm")"
+
+# Source NVM to set up Node.js and npm without sudo
+export NVM_DIR="$HOME/.nvm"
 [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh" # This loads nvm
 nvm install --lts
 
 # Get the path of the newly installed Node.js
 NODE_JS_PATH=$(which node)
-
 
 # Download and unzip the Sentry Node CLI into the node-specific directory
 curl -L -o "${NODE_DIR}/sentry-node-cli-linux.zip" "https://github.com/xai-foundation/sentry/releases/latest/download/sentry-node-cli-linux.zip"
@@ -131,7 +132,7 @@ chmod +x "${NODE_DIR}/start.sh"
 # Create the start.js Node script for the node
 cat <<EOF > "${NODE_DIR}/start.js"
 const { exec } = require("child_process");
-exec("/bin/bash /root/sentryNodes/${NODENAME}/start.sh", (error, stdout, stderr) => {
+exec("/bin/bash $HOME/sentryNodes/${NODENAME}/start.sh", (error, stdout, stderr) => {
     if (error) {
         console.log(\`error: \${error.message}\`);
         return;
@@ -145,23 +146,22 @@ exec("/bin/bash /root/sentryNodes/${NODENAME}/start.sh", (error, stdout, stderr)
 EOF
 
 # Create the systemd service file for the node
-SERVICE_FILE="/etc/systemd/system/${NODENAME}-sentry-node.service"
+SERVICE_FILE="$HOME/.config/systemd/user/${NODENAME}-sentry-node.service"
+mkdir -p "$HOME/.config/systemd/user/"
 cat <<EOF > "$SERVICE_FILE"
 [Unit]
 Description=Sentry Node Service for $NODENAME
-After=multi-user.target
 
 [Service]
 Type=simple
 ExecStart=$NODE_JS_PATH ${NODE_DIR}/start.js
-Restart=always
 
 [Install]
-WantedBy=multi-user.target
+WantedBy=default.target
 EOF
 
 # Enable and start the service
-sudo systemctl enable "${NODENAME}-sentry-node.service"
-sudo systemctl start "${NODENAME}-sentry-node.service"
+systemctl --user enable "${NODENAME}-sentry-node.service"
+systemctl --user start "${NODENAME}-sentry-node.service"
 
 echo "Sentry Node ${NODENAME} setup completed."
